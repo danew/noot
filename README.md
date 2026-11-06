@@ -25,7 +25,7 @@ Add it to **System Settings → General → Login Items** to start it at login.
 | Close note (gone forever) | `⌘W` |
 | Move | drag the dot at the top centre |
 | Resize | drag a corner (both axes) or a side (one axis) |
-| Toggle float on top | `⌘T` |
+| Pin on top (dot fills) | double-click the dot, or `⌘T` |
 | Quit | menu bar icon → Quit |
 
 Shortcut, padding, font size and window size are constants at the top of

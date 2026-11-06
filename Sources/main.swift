@@ -50,7 +50,8 @@ final class DragDot: NSView {
     override func mouseExited(with e: NSEvent) { hovering = false }
     override func cursorUpdate(with e: NSEvent) { NSCursor.openHand.set() }
     override func mouseDown(with e: NSEvent) {
-        guard let w = window else { return }
+        guard let w = window as? NoteWindow else { return }
+        if e.clickCount == 2 { w.toggleFloat(); return }
         NSCursor.closedHand.set()
         trackMouse(in: w) { start, dx, dy in start.offsetBy(dx: dx, dy: dy) }
         NSCursor.openHand.set()
@@ -62,7 +63,10 @@ final class DragDot: NSView {
         let r = NSRect(x: bounds.midX - d / 2, y: bounds.midY - d / 2, width: d, height: d)
         let path = NSBezierPath(ovalIn: r.insetBy(dx: 0.5, dy: 0.5))
         let color = NSColor.secondaryLabelColor
-        if hovering { color.setFill(); path.fill() }
+        // Pinned (always on top): solid fill. Hover while unpinned: faint fill.
+        let pinned = window?.level == .floating
+        if pinned { color.setFill(); path.fill() }
+        else if hovering { color.withAlphaComponent(0.4).setFill(); path.fill() }
         color.setStroke(); path.lineWidth = 1; path.stroke()
     }
 }
@@ -218,12 +222,19 @@ final class NoteWindow: NSWindow {
         }
 
         // Drag dot, top centre.
-        let dot = DragDot(frame: NSRect(x: b.midX - 12, y: b.maxY - 14, width: 24, height: 14))
+        dot = DragDot(frame: NSRect(x: b.midX - 12, y: b.maxY - 14, width: 24, height: 14))
         dot.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin]
         container.addSubview(dot)
 
         contentView = container
         initialFirstResponder = tv
+    }
+
+    private var dot: DragDot!
+
+    func toggleFloat() {
+        level = level == .floating ? .normal : .floating
+        dot.needsDisplay = true
     }
 
     override var canBecomeKey: Bool { true }
@@ -269,7 +280,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     @objc func toggleFloat(_ sender: NSMenuItem) {
         guard let w = NSApp.keyWindow else { return }
-        w.level = w.level == .floating ? .normal : .floating
+        (w as? NoteWindow)?.toggleFloat()
     }
 
     func buildStatusItem() {
